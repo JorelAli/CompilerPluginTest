@@ -1,3 +1,4 @@
+package io.github.jorelali.javacompilerplugins;
 import javax.lang.model.element.Name;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;

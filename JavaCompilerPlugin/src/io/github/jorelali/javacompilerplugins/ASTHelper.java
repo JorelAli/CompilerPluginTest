@@ -1,3 +1,4 @@
+package io.github.jorelali.javacompilerplugins;
 import javax.lang.model.element.Name;
 
 public class ASTHelper {

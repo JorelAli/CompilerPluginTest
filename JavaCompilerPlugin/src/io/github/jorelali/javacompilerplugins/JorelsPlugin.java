@@ -1,3 +1,4 @@
+package io.github.jorelali.javacompilerplugins;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.StatementTree;

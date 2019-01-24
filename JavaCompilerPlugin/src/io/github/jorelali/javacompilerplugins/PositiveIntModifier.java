@@ -1,3 +1,4 @@
+package io.github.jorelali.javacompilerplugins;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
