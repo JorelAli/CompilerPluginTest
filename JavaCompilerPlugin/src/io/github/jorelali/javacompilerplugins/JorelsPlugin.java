@@ -4,8 +4,8 @@ import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 
+import io.github.jorelali.javacompilerplugins.treescanners.ReflectionGeneratorTreeScanner;
 import io.github.jorelali.javacompilerplugins.treescanners.ReflectionImportTreeScanner;
-import io.github.jorelali.javacompilerplugins.treescanners.TestingTreeScanner;
 
 public class JorelsPlugin implements Plugin {
 
@@ -23,7 +23,8 @@ public class JorelsPlugin implements Plugin {
 			public void finished(TaskEvent taskEvent) {
 				if (taskEvent.getKind() == TaskEvent.Kind.PARSE) {
 					taskEvent.getCompilationUnit().accept(new ReflectionImportTreeScanner(task), null);
-					taskEvent.getCompilationUnit().accept(new TestingTreeScanner(task), null);
+					taskEvent.getCompilationUnit().accept(new ReflectionGeneratorTreeScanner(task), null);
+					//taskEvent.getCompilationUnit().accept(new TestingTreeScanner(task), null);
 				}
 			}
 
