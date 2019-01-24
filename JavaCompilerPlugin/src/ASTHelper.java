@@ -28,8 +28,4 @@ public class ASTHelper {
 		};
 	}
 
-	public static com.sun.tools.javac.util.Name makeSunName(String name) {
-		return (com.sun.tools.javac.util.Name) makeName(name);
-	}
-
 }

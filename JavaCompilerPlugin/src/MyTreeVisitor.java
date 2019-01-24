@@ -125,12 +125,12 @@ public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 //		maker.Annotation(new Attribute.Constant(
 //				new com.sun.tools.javac.code.Type.JCPrimitiveType(TypeTag.INT, TypeSymbol.), 2));
 		
-		VarSymbol s;
-		new VarSymbol(0, ASTHelper.makeSunName("myvar"), 
-				new com.sun.tools.javac.code.Type.JCPrimitiveType(null, null), null);
+//		VarSymbol s;
+//		new VarSymbol(0, ASTHelper.makeSunName("myvar"), 
+//				new com.sun.tools.javac.code.Type.JCPrimitiveType(null, null), null);
 		
-		maker.VarDef(null, null);
-		maker.Literal(TypeTag.CLASS, "hello");
+//		maker.VarDef(null, null);
+//		maker.Literal(TypeTag.CLASS, "hello");
 		
 		
 		block.stats.forEach(o -> System.out.println(o.getKind()));

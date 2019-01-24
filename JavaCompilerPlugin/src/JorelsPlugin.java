@@ -4,6 +4,7 @@ import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.Context;
 
 public class JorelsPlugin implements Plugin {
@@ -13,11 +14,27 @@ public class JorelsPlugin implements Plugin {
 		return "JorelsPlugin";
 	}
 
+	
+	
 	@Override
 	//call()
 	public void init(JavacTask task, String... args) {
-		System.out.println("Running!");
-		task.addTaskListener(new MyTaskListener(task));
+		//task.addTaskListener(new MyTaskListener(task));
+		 
+		task.addTaskListener(new TaskListener() {
+
+			PositiveIntModifier modifier = new PositiveIntModifier(((BasicJavacTask) task).getContext());
+			
+			@Override
+			public void finished(TaskEvent taskEvent) {
+				if (taskEvent.getKind() == TaskEvent.Kind.ANALYZE) {
+					modifier.scan(taskEvent.getCompilationUnit(), null);
+				}
+			}
+
+			@Override
+			public void started(TaskEvent var1) {}
+		});
 	}
 	
 	static class MyTaskListener implements TaskListener {
