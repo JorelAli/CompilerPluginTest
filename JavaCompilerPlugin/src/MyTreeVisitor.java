@@ -20,16 +20,24 @@ import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
+import com.sun.tools.javac.code.Attribute;
+import com.sun.tools.javac.code.Symbol.TypeSymbol;
+import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCBinary;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
+import com.sun.tools.javac.tree.JCTree.JCLiteral;
 import com.sun.tools.javac.tree.JCTree.JCThrow;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.Names;
+
+import sun.tools.java.Type;
 
 public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 	
@@ -97,7 +105,8 @@ public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 		JCBlock block = (JCBlock) node.getBody();
 		
 		TreeMaker maker = TreeMaker.instance(context);
-		JCExpression iae = maker.Ident(elements.getName("IllegalArgumentException"));
+		JCExpression iae = maker.Ident(Names.instance(context).fromString("IllegalArgumentException"));
+		//JCExpression iae = maker.Ident(elements.getName("IllegalArgumentException"));
 		
 		// Arg 1 is the enclosing class, but we won't instantiate an inner class.
 		// Arg 2 is a list of type parameters (of the enclosing class).
@@ -107,8 +116,23 @@ public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 		JCExpression expr = maker.NewClass(null, List.<JCExpression> nil(), iae, null, null);
 		JCThrow throwable = maker.Throw(expr);
 		
-		block.stats = block.stats.prepend(throwable);
-
+		//block.stats = block.stats.append(throwable);
+		
+		//maker.VarDef(maker.Modifiers(0), arg1, , arg3)
+		maker.If(maker.Literal(TypeTag.INT, 0), null, null);
+		
+		//todo how to make a JCExpression
+//		maker.Annotation(new Attribute.Constant(
+//				new com.sun.tools.javac.code.Type.JCPrimitiveType(TypeTag.INT, TypeSymbol.), 2));
+		
+		VarSymbol s;
+		new VarSymbol(0, ASTHelper.makeSunName("myvar"), 
+				new com.sun.tools.javac.code.Type.JCPrimitiveType(null, null), null);
+		
+		maker.VarDef(null, null);
+		maker.Literal(TypeTag.CLASS, "hello");
+		
+		
 		block.stats.forEach(o -> System.out.println(o.getKind()));
 		System.out.println("b");
 //		if(right.getKind().equals(com.sun.source.tree.Tree.Kind.INT_LITERAL)) {
@@ -121,6 +145,14 @@ public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 		return super.visitMethod(node, p);
 	}
 	
+	@Override
+	public Void visitVariable(VariableTree node, Void arg1) {
+		System.out.println(node.getName());
+		System.out.println("\t" + node.getName().length());
+		System.out.println("\t" + node.getName().subSequence(0, node.getName().length()));
+		
+		return super.visitVariable(node, arg1);
+	}
 	
 //	@Override
 //	public Void visitVariable(VariableTree node, Void p) {
