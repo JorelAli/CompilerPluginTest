@@ -7,6 +7,7 @@ import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePathScanner;
+import com.sun.source.util.TreeScanner;
 import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCBinary;
@@ -14,12 +15,13 @@ import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCIf;
 import com.sun.tools.javac.tree.TreeMaker;
+import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 
-public class PositiveIntModifier extends TreePathScanner<Void, Void> {
+public class PositiveIntModifier extends TreeScanner<Void, Void> {
 
 	private static Set<String> TARGET_TYPES = Stream
 			.of(byte.class, short.class, char.class, int.class, long.class, float.class, double.class)
@@ -42,13 +44,22 @@ public class PositiveIntModifier extends TreePathScanner<Void, Void> {
 	
 	@Override
 	public Void visitMethod(MethodTree methodTree, Void p) {
+		
+		//TreeTranslator.result;
+		
+		//methodTree.accept(this, null);
+		
+		
 		TreeMaker maker = TreeMaker.instance(context);
 		Name parameterId = Names.instance(context).fromString("i"); //parameter.getName().toString(), where parameter instanceof VariableTree
 		
 		//LE = Less than or Equal to
 		JCBinary CONDITION = maker.Binary(JCTree.Tag.LE, maker.Ident(parameterId), maker.Literal(TypeTag.INT, 0));
 		
+		
+		
 		JCExpression AIE = maker.Ident(Names.instance(context).fromString(IllegalArgumentException.class.getSimpleName()));
+		
 		
 		JCBlock BLOCK = maker.Block(0, List.of(
 				maker.Throw(
@@ -76,8 +87,16 @@ public class PositiveIntModifier extends TreePathScanner<Void, Void> {
 					System.out.println("Preparing to instrument i!");
 					
 					JCIf ifStatement = maker.at(((JCTree) varTree).pos).If(maker.Parens(CONDITION), BLOCK, null);
+					
+					//System.out.println(ifStatement);
+					
+					
 					JCBlock block = (JCBlock) methodTree.getBody();
-					block.stats = block.stats.prepend(ifStatement);
+					block.stats = block.stats.append(ifStatement);
+					
+					block.stats.forEach(System.out::println);
+					block.stats.forEach(o -> System.out.println(o.getKind()));
+					
 					System.out.println("Instrumentation complete!");
 					break;
 					
@@ -85,6 +104,9 @@ public class PositiveIntModifier extends TreePathScanner<Void, Void> {
 				}
 			}
 		}
+		
+		
+		
 		
 //		methodTree.getBody().getStatements().forEach(o -> {
 //			System.out.println(o + "\t\t" + o.getKind());
