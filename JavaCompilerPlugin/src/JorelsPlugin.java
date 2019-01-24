@@ -39,8 +39,25 @@ public class JorelsPlugin implements Plugin {
 				GENERATE – generating binaries for the target source file
 			 */
 			if (taskEvent.getKind() == TaskEvent.Kind.ANALYZE) {
+				
+			}
+			
+			switch(taskEvent.getKind()) {
+			case ANALYZE:
+				System.out.println("== ANALYSE ==");
 				CompilationUnitTree compilationUnit = taskEvent.getCompilationUnit();
 				visitor.scan(compilationUnit, null);
+				break;
+			case ANNOTATION_PROCESSING:
+			case ANNOTATION_PROCESSING_ROUND:
+			case ENTER:
+			case GENERATE:
+			case PARSE:
+				System.out.println("== " + taskEvent.getKind().name() + " ==");
+				break;
+			default:
+				break;
+			
 			}
 			
 			

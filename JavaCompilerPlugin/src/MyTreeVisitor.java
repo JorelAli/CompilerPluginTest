@@ -11,6 +11,7 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LineMap;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.VariableTree;
@@ -21,10 +22,14 @@ import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.JCTree.JCBinary;
+import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCThrow;
+import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.List;
 
 public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 	
@@ -68,112 +73,148 @@ public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 		return super.visitCompilationUnit(tree, p);
 	}
 
+//	@Override
+//	public Void visitBinary(BinaryTree tree, Void p) {
+//		
+//		// unpack the kind of expression, left and right hand side
+//		ExpressionTree left = tree.getLeftOperand();
+//		ExpressionTree right = tree.getRightOperand();
+//		Kind kind = tree.getKind();
+//		
+//
+//		// apply our code pattern logic
+//		if (isGetCallOnMap(new TreePath(getCurrentPath(), left)) && kind == Kind.EQUAL_TO && isNullLiteral(right)) {
+//			System.out.println("Found Match at line: " + getLineNumber(tree) + " in " + currCompUnit.getSourceFile().getName());
+//		}
+//		return super.visitBinary(tree, p);
+//	}
+	
 	@Override
-	public Void visitBinary(BinaryTree tree, Void p) {
+	public Void visitMethod(MethodTree node, Void p) {
 		
-		// unpack the kind of expression, left and right hand side
-		ExpressionTree left = tree.getLeftOperand();
-		ExpressionTree right = tree.getRightOperand();
-		Kind kind = tree.getKind();
+		System.out.println("Method visitation!");
+		
+		JCBlock block = (JCBlock) node.getBody();
+		
+		TreeMaker maker = TreeMaker.instance(context);
+		JCExpression iae = maker.Ident(elements.getName("IllegalArgumentException"));
+		
+		// Arg 1 is the enclosing class, but we won't instantiate an inner class.
+		// Arg 2 is a list of type parameters (of the enclosing class).
+		// Arg 3 is the actual class expression.
+		// Arg 4 is a list of arguments to pass to the constructor.
+		// Arg 5 is a class body, for creating an anonymous class.
+		JCExpression expr = maker.NewClass(null, List.<JCExpression> nil(), iae, null, null);
+		JCThrow throwable = maker.Throw(expr);
+		
+		block.stats = block.stats.prepend(throwable);
 
-		// apply our code pattern logic
-		if (isGetCallOnMap(new TreePath(getCurrentPath(), left)) && kind == Kind.EQUAL_TO && isNullLiteral(right)) {
-			System.out.println("Found Match at line: " + getLineNumber(tree) + " in " + currCompUnit.getSourceFile().getName());
-		}
-		return super.visitBinary(tree, p);
+		block.stats.forEach(o -> System.out.println(o.getKind()));
+		System.out.println("b");
+//		if(right.getKind().equals(com.sun.source.tree.Tree.Kind.INT_LITERAL)) {
+//			JCBinary b = (JCBinary) tree;
+//			JCExpression s;
+//			
+//		}
+		
+		System.out.println("a");
+		return super.visitMethod(node, p);
 	}
 	
 	
-	
-	@Override
-	public Void visitVariable(VariableTree node, Void p) {
-		TypeMirror type = trees.getTypeMirror(getCurrentPath());
-		//trees.printMessage(Diagnostic.Kind.NOTE, "Type is " + type, node, currCompUnit);
-		//trees.printMessage(Diagnostic.Kind.OTHER, "generic warning", node, currCompUnit);
-		
-		
-		if(type.getKind() == TypeKind.INT) {
-			System.out.println("Preparing to instrument on int type");
-			
-			System.out.println(node.getName());
-			
-			if(node.getName().toString().equals("i")) {
-				trees.printMessage(Diagnostic.Kind.ERROR, "You can't name a variable i!", node, currCompUnit);
-			}
-			
-			
-			TreeMaker maker = TreeMaker.instance(context);
-			
-//			com.sun.tools.javac.util.Name mName = new com.sun.tools.javac.util.Name(null) {
+//	@Override
+//	public Void visitVariable(VariableTree node, Void p) {
+//		TypeMirror type = trees.getTypeMirror(getCurrentPath());
+//		//trees.printMessage(Diagnostic.Kind.NOTE, "Type is " + type, node, currCompUnit);
+//		//trees.printMessage(Diagnostic.Kind.OTHER, "generic warning", node, currCompUnit);
+//		
+//		
+//		if(type.getKind() == TypeKind.INT) {
+//			System.out.println("Preparing to instrument on int type");
+//			
+//			System.out.println(node.getName());
+//			
+//			if(node.getName().toString().equals("i")) {
+//				//trees.printMessage(Diagnostic.Kind.ERROR, "You can't name a variable i!", node, currCompUnit);
+//			}
+//			
+//			
+//			TreeMaker maker = TreeMaker.instance(context);
+//			
+////			com.sun.tools.javac.util.Name mName = new com.sun.tools.javac.util.Name(null) {
+////
+////				private final String zName = "NullPointerException";
+////				
+////				@Override
+////				public int getIndex() {
+////					// TODO Auto-generated method stub
+////					return 0;
+////				}
+////
+////				@Override
+////				public int getByteLength() {
+////					return zName.length();
+////					// TODO Auto-generated method stub
+////					//return 0;
+////				}
+////
+////				@Override
+////				public byte getByteAt(int var1) {
+////					return zName.getBytes()[var1];
+////					// TODO Auto-generated method stub
+////					//return 0;
+////				}
+////
+////				@Override
+////				public byte[] getByteArray() {
+////					return zName.getBytes();
+////					// TODO Auto-generated method stub
+////					//return null;
+////				}
+////
+////				@Override
+////				public int getByteOffset() {
+////					// TODO Auto-generated method stub
+////					return 0;
+////				}
+////				
+////			};
+//			
+//			//JCExpression expr = maker.NewClass(null, null, maker.Ident(mName), null, null);
+//			
+//			
+//			/*
+//			 * JCFieldAccess iae = treeMaker.Select(
+//				treeMaker.Select(
+//						treeMaker.Ident(elements.getName("java")),
+//				elements.getName("lang")),
+//			elements.getName("IllegalArgumentException"));
+//			 */
+//			
+//			JCExpression iae = maker.Ident(elements.getName("IllegalArgumentException"));
+//			
+//			
+//			JCExpression expr = maker.NewClass(null, null, iae, null, null);
 //
-//				private final String zName = "NullPointerException";
-//				
-//				@Override
-//				public int getIndex() {
-//					// TODO Auto-generated method stub
-//					return 0;
-//				}
-//
-//				@Override
-//				public int getByteLength() {
-//					return zName.length();
-//					// TODO Auto-generated method stub
-//					//return 0;
-//				}
-//
-//				@Override
-//				public byte getByteAt(int var1) {
-//					return zName.getBytes()[var1];
-//					// TODO Auto-generated method stub
-//					//return 0;
-//				}
-//
-//				@Override
-//				public byte[] getByteArray() {
-//					return zName.getBytes();
-//					// TODO Auto-generated method stub
-//					//return null;
-//				}
-//
-//				@Override
-//				public int getByteOffset() {
-//					// TODO Auto-generated method stub
-//					return 0;
-//				}
-//				
-//			};
-			
-			//JCExpression expr = maker.NewClass(null, null, maker.Ident(mName), null, null);
-			
-			
-			/*
-			 * JCFieldAccess iae = treeMaker.Select(
-				treeMaker.Select(
-						treeMaker.Ident(elements.getName("java")),
-				elements.getName("lang")),
-			elements.getName("IllegalArgumentException"));
-			 */
-			
-			JCExpression iae = maker.Ident(elements.getName("IllegalArgumentException"));
-			
-			
-			JCExpression expr = maker.NewClass(null, null, iae, null, null);
-
-			JCThrow throwable = maker
-					.at(((JCTree) node).pos)
-					.Throw(expr);
-					
-			(JCTree) currCompUnit
-			//res
-			//.VarDef(new VarSymbol(0L, node.getName(), Type.JCPrimitiveType, (Symbol)null), null);
-			
-			
-			
-		}
-		
-		
-		return super.visitVariable(node, p);
-	}
+//			JCThrow throwable = maker
+//					.at(((JCTree) node).pos)
+//					.Throw(expr);
+//					
+//			JCVariableDecl variable = (JCVariableDecl) node;
+//			
+//			
+//			
+//			
+//			//res
+//			//.VarDef(new VarSymbol(0L, node.getName(), Type.JCPrimitiveType, (Symbol)null), null);
+//			
+//			
+//			
+//		}
+//		
+//		
+//		return super.visitVariable(node, p);
+//	}
 	
 	
 
