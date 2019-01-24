@@ -19,6 +19,7 @@ import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
+import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCThrow;
@@ -39,11 +40,13 @@ public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 	private final Name getName;
 
 	private final Context context;
-
+	private final JavacElements elements;
+	
 	private CompilationUnitTree currCompUnit;
 
 	MyTreeVisitor(JavacTask task, Context context) {
 		this.context = context;
+		elements = JavacElements.instance(context);
 		
 		types = task.getTypes();
 		trees = Trees.instance(task);
@@ -85,10 +88,15 @@ public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 	@Override
 	public Void visitVariable(VariableTree node, Void p) {
 		TypeMirror type = trees.getTypeMirror(getCurrentPath());
-		trees.printMessage(Diagnostic.Kind.NOTE, "Type is " + type, node, currCompUnit);
+		//trees.printMessage(Diagnostic.Kind.NOTE, "Type is " + type, node, currCompUnit);
+		//trees.printMessage(Diagnostic.Kind.OTHER, "generic warning", node, currCompUnit);
+		trees.printMessage(Diagnostic.Kind.ERROR, "generic error", node, currCompUnit);
 		
 		if(type.getKind() == TypeKind.INT) {
 			System.out.println("Preparing to instrument on int type");
+			
+			System.out.println(node.getName());
+			
 			TreeMaker maker = TreeMaker.instance(context);
 			
 			com.sun.tools.javac.util.Name mName = new com.sun.tools.javac.util.Name(null) {
@@ -135,6 +143,19 @@ public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 			JCThrow throwable = maker
 			.at(((JCTree) node).pos)
 			.Throw(expr);
+			
+			/*
+			 * JCFieldAccess iae = treeMaker.Select(
+				treeMaker.Select(
+						treeMaker.Ident(elements.getName("java")),
+				elements.getName("lang")),
+			elements.getName("IllegalArgumentException"));
+			 */
+			
+			JCExpression iae = maker.Ident(elements.getName("IllegalArgumentException"));
+			
+			
+			maker.NewClass(null, null, iae, null, null);
 			
 			//res
 			//.VarDef(new VarSymbol(0L, node.getName(), Type.JCPrimitiveType, (Symbol)null), null);
