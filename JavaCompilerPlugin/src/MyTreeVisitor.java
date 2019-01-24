@@ -90,59 +90,61 @@ public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 		TypeMirror type = trees.getTypeMirror(getCurrentPath());
 		//trees.printMessage(Diagnostic.Kind.NOTE, "Type is " + type, node, currCompUnit);
 		//trees.printMessage(Diagnostic.Kind.OTHER, "generic warning", node, currCompUnit);
-		trees.printMessage(Diagnostic.Kind.ERROR, "generic error", node, currCompUnit);
+		
 		
 		if(type.getKind() == TypeKind.INT) {
 			System.out.println("Preparing to instrument on int type");
 			
 			System.out.println(node.getName());
 			
+			if(node.getName().toString().equals("i")) {
+				trees.printMessage(Diagnostic.Kind.ERROR, "You can't name a variable i!", node, currCompUnit);
+			}
+			
+			
 			TreeMaker maker = TreeMaker.instance(context);
 			
-			com.sun.tools.javac.util.Name mName = new com.sun.tools.javac.util.Name(null) {
-
-				private final String zName = "NullPointerException";
-				
-				@Override
-				public int getIndex() {
-					// TODO Auto-generated method stub
-					return 0;
-				}
-
-				@Override
-				public int getByteLength() {
-					return zName.length();
-					// TODO Auto-generated method stub
-					//return 0;
-				}
-
-				@Override
-				public byte getByteAt(int var1) {
-					return zName.getBytes()[var1];
-					// TODO Auto-generated method stub
-					//return 0;
-				}
-
-				@Override
-				public byte[] getByteArray() {
-					return zName.getBytes();
-					// TODO Auto-generated method stub
-					//return null;
-				}
-
-				@Override
-				public int getByteOffset() {
-					// TODO Auto-generated method stub
-					return 0;
-				}
-				
-			};
+//			com.sun.tools.javac.util.Name mName = new com.sun.tools.javac.util.Name(null) {
+//
+//				private final String zName = "NullPointerException";
+//				
+//				@Override
+//				public int getIndex() {
+//					// TODO Auto-generated method stub
+//					return 0;
+//				}
+//
+//				@Override
+//				public int getByteLength() {
+//					return zName.length();
+//					// TODO Auto-generated method stub
+//					//return 0;
+//				}
+//
+//				@Override
+//				public byte getByteAt(int var1) {
+//					return zName.getBytes()[var1];
+//					// TODO Auto-generated method stub
+//					//return 0;
+//				}
+//
+//				@Override
+//				public byte[] getByteArray() {
+//					return zName.getBytes();
+//					// TODO Auto-generated method stub
+//					//return null;
+//				}
+//
+//				@Override
+//				public int getByteOffset() {
+//					// TODO Auto-generated method stub
+//					return 0;
+//				}
+//				
+//			};
 			
-			JCExpression expr = maker.NewClass(null, null, maker.Ident(mName), null, null);
+			//JCExpression expr = maker.NewClass(null, null, maker.Ident(mName), null, null);
 			
-			JCThrow throwable = maker
-			.at(((JCTree) node).pos)
-			.Throw(expr);
 			
 			/*
 			 * JCFieldAccess iae = treeMaker.Select(
@@ -155,10 +157,18 @@ public class MyTreeVisitor extends TreePathScanner<Void, Void> {
 			JCExpression iae = maker.Ident(elements.getName("IllegalArgumentException"));
 			
 			
-			maker.NewClass(null, null, iae, null, null);
-			
+			JCExpression expr = maker.NewClass(null, null, iae, null, null);
+
+			JCThrow throwable = maker
+					.at(((JCTree) node).pos)
+					.Throw(expr);
+					
+			(JCTree) currCompUnit
 			//res
 			//.VarDef(new VarSymbol(0L, node.getName(), Type.JCPrimitiveType, (Symbol)null), null);
+			
+			
+			
 		}
 		
 		
