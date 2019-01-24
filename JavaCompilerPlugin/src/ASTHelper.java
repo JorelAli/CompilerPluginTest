@@ -2,7 +2,7 @@ import javax.lang.model.element.Name;
 
 public class ASTHelper {
 
-	public static Name makeName(String name) {		
+	public static Name makeName(String name) {
 		return new Name() {
 
 			@Override
@@ -24,12 +24,12 @@ public class ASTHelper {
 			public boolean contentEquals(CharSequence cs) {
 				return name.contentEquals(cs);
 			}
-			
+
 		};
 	}
-	
+
 	public static com.sun.tools.javac.util.Name makeSunName(String name) {
 		return (com.sun.tools.javac.util.Name) makeName(name);
 	}
-	
+
 }
