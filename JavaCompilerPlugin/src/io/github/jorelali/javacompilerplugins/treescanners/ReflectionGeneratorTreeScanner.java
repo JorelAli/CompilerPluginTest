@@ -1,6 +1,9 @@
 package io.github.jorelali.javacompilerplugins.treescanners;
 
-import static io.github.jorelali.javacompilerplugins.ASTHelper.*;
+import static io.github.jorelali.javacompilerplugins.ASTHelper.createAssignment;
+import static io.github.jorelali.javacompilerplugins.ASTHelper.createLocalPrimitiveVariable;
+import static io.github.jorelali.javacompilerplugins.ASTHelper.createTreeMaker;
+import static io.github.jorelali.javacompilerplugins.ASTHelper.parseAnnotation;
 
 import java.util.Map;
 
@@ -15,10 +18,13 @@ import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
+import com.sun.tools.javac.tree.JCTree.JCIdent;
+import com.sun.tools.javac.tree.JCTree.JCNewClass;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.Names;
 
 public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 
@@ -45,7 +51,8 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 				if(annotation.getAnnotationType().toString().equals("ReflectionMethod")) {
 					
 					TreeMaker maker = createTreeMaker(context, methodTree);
-					
+					Names names = Names.instance(context);
+
 					Map<String, String> annotationMap = parseAnnotation(annotation);
 					String methodName = methodTree.getName().toString();
 					//Class targetClass = Class.forName(annotationMap.get("targetClass").replace(".class", ""));
@@ -55,16 +62,35 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					 * inside, you want blah.invoke()
 					 */
 					
-					JCExpression inner = maker.Select(maker.Ident(makeName("java")), makeName("lang"));
-					inner = maker.Select(inner, makeName("reflect"));
-					inner = maker.Select(inner, makeName("Method"));
+					
+					JCExpression inner = maker.Select(maker.Ident(names.fromString("java")), names.fromString("lang"));
+					inner = maker.Select(inner, names.fromString("reflect"));
+					inner = maker.Select(inner, names.fromString("Modifier"));
 					
 					JCVariableDecl declareInt = createLocalPrimitiveVariable(maker, "hello", TypeTag.INT, maker.Literal(TypeTag.INT, 0));
 					JCExpressionStatement assignment = createAssignment(maker, declareInt, maker.Literal(TypeTag.INT, 2));
-						
+
+					class Example { }					
+					System.out.println(maker.Literal(TypeTag.CLASS, Example.class));
+					
+					//System.out.println(Names.instance(context).fromString("java").equals(makeName("java")));
+					
+					//new java.lang.reflect.Modifier();
+					//JCIdent iae = maker.Ident(inner.);//maker.Ident(Names.instance(context).fromString("java.lang.reflect.Modifier"));
+					//JCIdent iae = maker.Ident(Names.instance(context).fromString("IllegalArgumentException"));
+					JCNewClass a = maker.NewClass(null, List.nil(), inner, List.nil(), null);
+					
+					//TODO:
+					//method invocation
+					//field accessing
+					//Class instantiation
+					//non-primitive variable declaration
+					System.out.println(a);
+					
+					
 					
 										
-					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignment));
+					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignment, maker.Exec(a)));
 					System.out.println(logicBlock);
 					
 					

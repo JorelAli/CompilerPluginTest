@@ -27,7 +27,7 @@ public class ASTHelper {
 		return map;
 	}
 	
-	public static Name makeName(String name) {
+	private static Name makeNameDirty(String name) {
 		return new Name(null) {
 
 			@Override
@@ -83,13 +83,11 @@ public class ASTHelper {
 	}
 	
 	public static TreeMaker createTreeMaker(Context context, MethodTree methodTree) {
-		TreeMaker maker = TreeMaker.instance(context);
-		maker = maker.at(methodPosition(methodTree));
-		return maker;
+		return TreeMaker.instance(context).at(methodPosition(methodTree));
 	}
 	
 	public static JCVariableDecl createLocalPrimitiveVariable(TreeMaker maker, String name, TypeTag type, JCExpression initValue) {
-		return maker.VarDef(maker.Modifiers(0), makeName(name), maker.TypeIdent(type), initValue);
+		return maker.VarDef(maker.Modifiers(0), makeNameDirty(name), maker.TypeIdent(type), initValue);
 	}
 
 	public static JCExpressionStatement createAssignment(TreeMaker maker, JCVariableDecl variable, JCExpression newValue) {
