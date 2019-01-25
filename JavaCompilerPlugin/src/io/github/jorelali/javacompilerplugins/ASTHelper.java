@@ -12,11 +12,11 @@ import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree.JCAssign;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
-import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 
@@ -121,6 +121,15 @@ public class ASTHelper {
 				String topElement = identNamesStack.pop();
 				return maker.Select(resolveName(maker, names, String.join(".", identNamesStack)), names.fromString(topElement));
 		}
+	}
+	
+	// Arg 1 is the enclosing class, but we won't instantiate an inner class.
+	// Arg 2 is a list of type parameters (of the enclosing class).
+	// Arg 3 is the actual class expression.
+	// Arg 4 is a list of arguments to pass to the constructor.
+	// Arg 5 is a class body, for creating an anonymous class.
+	public static JCExpressionStatement newClassInstanceWithNoParamsOrGenerics(TreeMaker maker, Names names, String fullClassNameWithPath) {
+		return maker.Exec(maker.NewClass(null, List.nil(), resolveName(maker, names, fullClassNameWithPath), List.nil(), null));
 	}
 	
 }
