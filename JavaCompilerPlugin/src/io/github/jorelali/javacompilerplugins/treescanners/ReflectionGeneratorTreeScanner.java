@@ -19,6 +19,8 @@ import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
+import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
+import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
@@ -40,8 +42,9 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 	
 	/*
 	 * TODO:
-	 * Non-primitive variable assignment
 	 * Class instantiation with parameters
+	 * Method invocation
+	 * Field accessing
 	 */
 	
 	@Override
@@ -69,7 +72,10 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					 * inside, you want blah.invoke()
 					 */
 					
-										
+//					Scanner scanner = new Scanner(System.in);
+//					System.out.println(scanner.nextLine());
+					
+					
 					JCVariableDecl declareInt = createLocalPrimitiveVariable(maker, "hello", TypeTag.INT, maker.Literal(TypeTag.INT, 0));
 					System.out.println(declareInt);
 					JCExpressionStatement assignIntTo2 = createAssignment(maker, declareInt, maker.Literal(TypeTag.INT, 2));
@@ -80,12 +86,31 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					JCVariableDecl modifierDecl = maker.VarDef(maker.Modifiers(0), ASTHelper.makeNameDirty("myModifier"), modifierExpr, maker.NewClass(null, List.nil(), modifierExpr, List.nil(), null));
 					System.out.println(modifierDecl);
 					
+					JCExpression exception = ASTHelper.resolveName(maker, names, "java.lang.Exception");
+					
+					//ASTHelper.resolveName(maker, names, "java.lang.reflect.M")
+					
+					
+					// private static final <loggerType> log = <factoryMethod>(<parameter>);
+//					JCExpression loggerType = chainDotsString(typeNode, framework.getLoggerTypeName());
+//					JCExpression factoryMethod = chainDotsString(typeNode, framework.getLoggerFactoryMethodName());
+//					
+//					JCExpression loggerName = framework.createFactoryParameter(typeNode, loggingType);
+//					JCMethodInvocation factoryMethodCall = maker.Apply(List.<JCExpression>nil(), factoryMethod, List.<JCExpression>of(loggerName));
+
+					
 					class Example { }					
 					System.out.println(maker.Literal(TypeTag.CLASS, Example.class));
 					
 					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignIntTo2, newModifier, modifierDecl));
 					System.out.println(logicBlock);
 					
+					methodTree.getThrows();
+					//methodTree.getThrows()
+//					JCMethodDecl thisMethod = (JCMethodDecl) methodTree;
+//					thisMethod.thrown = thisMethod.thrown.append(exception);
+					
+					ASTHelper.addExceptionToMethodDeclaredThrows(maker, names, methodTree, Exception.class);
 					
 					JCBlock block = (JCBlock) methodTree.getBody();
 					block.stats = block.stats.append(logicBlock);

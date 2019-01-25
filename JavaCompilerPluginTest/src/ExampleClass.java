@@ -2,7 +2,7 @@ public class ExampleClass {
 
 	private String myString = "hello";
 
-	private void sayHi() {
+	private static void sayHi() {
 		System.out.println("Hi!");
 	}
 	

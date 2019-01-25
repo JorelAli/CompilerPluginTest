@@ -94,6 +94,11 @@ public class ASTHelper {
 		return maker.VarDef(maker.Modifiers(0), makeNameDirty(name), maker.TypeIdent(type), initValue);
 	}
 
+	public static void addExceptionToMethodDeclaredThrows(TreeMaker maker, Names names, MethodTree methodTree, Class<? extends Exception> exception) {
+		JCMethodDecl thisMethod = (JCMethodDecl) methodTree;
+		thisMethod.thrown = thisMethod.thrown.append(ASTHelper.resolveName(maker, names, exception.getName()));
+	}
+	
 	public static JCExpressionStatement createAssignment(TreeMaker maker, JCVariableDecl variable, JCExpression newValue) {
 		return maker.Exec(maker.Assign(maker.Ident(variable.name), newValue));
 	}
