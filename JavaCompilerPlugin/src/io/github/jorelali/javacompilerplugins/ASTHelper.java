@@ -31,7 +31,7 @@ public class ASTHelper {
 		return map;
 	}
 	
-	private static Name makeNameDirty(String name) {
+	public static Name makeNameDirty(String name) {
 		return new Name(null) {
 
 			@Override

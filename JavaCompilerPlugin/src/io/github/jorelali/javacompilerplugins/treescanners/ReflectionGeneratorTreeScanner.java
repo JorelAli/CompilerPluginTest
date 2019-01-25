@@ -17,12 +17,15 @@ import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
+import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
+
+import io.github.jorelali.javacompilerplugins.ASTHelper;
 
 public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 
@@ -68,13 +71,19 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					
 										
 					JCVariableDecl declareInt = createLocalPrimitiveVariable(maker, "hello", TypeTag.INT, maker.Literal(TypeTag.INT, 0));
+					System.out.println(declareInt);
 					JCExpressionStatement assignIntTo2 = createAssignment(maker, declareInt, maker.Literal(TypeTag.INT, 2));
 					JCExpressionStatement newModifier = newClassInstanceWithNoParamsOrGenerics(maker, names, "java.lang.reflect.Modifier");
+					
+					JCExpression modifierExpr = ASTHelper.resolveName(maker, names, "java.lang.reflect.Modifier");
+					
+					JCVariableDecl modifierDecl = maker.VarDef(maker.Modifiers(0), ASTHelper.makeNameDirty("myModifier"), modifierExpr, maker.NewClass(null, List.nil(), modifierExpr, List.nil(), null));
+					System.out.println(modifierDecl);
 					
 					class Example { }					
 					System.out.println(maker.Literal(TypeTag.CLASS, Example.class));
 					
-					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignIntTo2, newModifier));
+					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignIntTo2, newModifier, modifierDecl));
 					System.out.println(logicBlock);
 					
 					
