@@ -35,6 +35,12 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 		this.trees = Trees.instance(task);
 	}
 	
+	/*
+	 * TODO:
+	 * Non-primitive variable assignment
+	 * Class instantiation with parameters
+	 */
+	
 	@Override
 	public Void visitCompilationUnit(CompilationUnitTree compilationUnitTree, Void p) {
 		currentCompilationUnitTree = compilationUnitTree;
