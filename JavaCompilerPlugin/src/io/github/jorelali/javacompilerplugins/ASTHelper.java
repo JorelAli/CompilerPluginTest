@@ -4,10 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.sun.source.tree.AnnotationTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree.JCAssign;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
+import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
+import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
+import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
+import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 
 public class ASTHelper {
@@ -70,6 +76,24 @@ public class ASTHelper {
 			}
 
 		};
+	}
+	
+	public static int methodPosition(MethodTree methodTree) {
+		return ((JCMethodDecl) methodTree).pos;
+	}
+	
+	public static TreeMaker createTreeMaker(Context context, MethodTree methodTree) {
+		TreeMaker maker = TreeMaker.instance(context);
+		maker = maker.at(methodPosition(methodTree));
+		return maker;
+	}
+	
+	public static JCVariableDecl createLocalPrimitiveVariable(TreeMaker maker, String name, TypeTag type, JCExpression initValue) {
+		return maker.VarDef(maker.Modifiers(0), makeName(name), maker.TypeIdent(type), initValue);
+	}
+
+	public static JCExpressionStatement createAssignment(TreeMaker maker, JCVariableDecl variable, JCExpression newValue) {
+		return maker.Exec(maker.Assign(maker.Ident(variable.name), newValue));
 	}
 	
 	//maker.Select(maker.Select(maker.Ident(NAME[java]), NAME[lang]), NAME[String]).
