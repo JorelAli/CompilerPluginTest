@@ -26,6 +26,8 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 
+import io.github.jorelali.javacompilerplugins.ASTHelper;
+
 public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 
 	private final Context context;
@@ -66,6 +68,11 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					JCExpression inner = maker.Select(maker.Ident(names.fromString("java")), names.fromString("lang"));
 					inner = maker.Select(inner, names.fromString("reflect"));
 					inner = maker.Select(inner, names.fromString("Modifier"));
+					
+					
+					inner = ASTHelper.resolveName(maker, names, "java.lang.reflect.Modifier");
+					//System.out.println("inner: " + inner);
+					System.out.println(ASTHelper.resolveName(maker, names, "java.lang.reflect.Modifier"));
 					
 					JCVariableDecl declareInt = createLocalPrimitiveVariable(maker, "hello", TypeTag.INT, maker.Literal(TypeTag.INT, 0));
 					JCExpressionStatement assignment = createAssignment(maker, declareInt, maker.Literal(TypeTag.INT, 2));

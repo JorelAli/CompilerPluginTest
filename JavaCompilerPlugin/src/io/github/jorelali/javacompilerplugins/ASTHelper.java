@@ -1,7 +1,10 @@
 package io.github.jorelali.javacompilerplugins;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
+import java.util.stream.Collectors;
 
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.MethodTree;
@@ -15,6 +18,7 @@ import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Names;
 
 public class ASTHelper {
 
@@ -95,28 +99,28 @@ public class ASTHelper {
 	}
 	
 	//maker.Select(maker.Select(maker.Ident(NAME[java]), NAME[lang]), NAME[String]).
-	public static JCExpression a(TreeMaker maker, String path) {
-		String[] names = path.split("\\.");
+	/**
+	 * Resolves the JCExpression from a given name.
+	 * @param maker
+	 * @param names
+	 * @param path A valid path, for example java.lang.reflect.Modifier
+	 * @return
+	 */
+	public static JCExpression resolveName(TreeMaker maker, Names names, String path) {
+		String[] identNames = path.split("\\.");
+		Stack<String> identNamesStack = Arrays.stream(identNames).collect(Collectors.toCollection(Stack::new));
 		
-		for(int i = 0; i < names.length - 1; i++) {
-			
+		switch(identNames.length) {
+			case 0:
+				throw new RuntimeException("Invalid name splitting thingy");
+			case 1:
+				return maker.Ident(names.fromString(identNames[0]));
+			case 2:
+				return maker.Select(maker.Ident(names.fromString(identNames[0])), names.fromString(identNames[1]));
+			default:
+				String topElement = identNamesStack.pop();
+				return maker.Select(resolveName(maker, names, String.join(".", identNamesStack)), names.fromString(topElement));
 		}
-		
-		//https://www.programcreek.com/java-api-examples/?code=git03394538/lombok-ianchiu/lombok-ianchiu-master/src/core/lombok/javac/handlers/HandleLog.java#
-		
-//		maker.Select(names[0], names[1]);, 2, 3, 4...
-//		
-//		
-//		A = aa(maker, name1, name2)
-//		
-//		aa(maker, A, name3)
-		
-		return null;
-	}
-	
-	public static JCFieldAccess aa(TreeMaker maker, Name name1, Name name2) {
-		return maker.Select(maker.Ident(name1), name2);
-		
 	}
 	
 }
