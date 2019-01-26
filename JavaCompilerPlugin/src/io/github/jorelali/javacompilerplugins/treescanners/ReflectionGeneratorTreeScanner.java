@@ -1,6 +1,10 @@
 package io.github.jorelali.javacompilerplugins.treescanners;
 
+import static io.github.jorelali.javacompilerplugins.ASTHelper.addExceptionToMethodDeclaredThrows;
 import static io.github.jorelali.javacompilerplugins.ASTHelper.createTreeMaker;
+import static io.github.jorelali.javacompilerplugins.ASTHelper.getAnnotationValue;
+import static io.github.jorelali.javacompilerplugins.ASTHelper.listInsert;
+import static io.github.jorelali.javacompilerplugins.ASTHelper.resolveName;
 
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
@@ -11,7 +15,6 @@ import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.TypeTag;
-import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCAssign;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
@@ -25,12 +28,14 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 
-import static io.github.jorelali.javacompilerplugins.ASTHelper.*;
+import io.github.jorelali.javacompilerplugins.annotations.ReflectionStaticField;
+import io.github.jorelali.javacompilerplugins.annotations.ReflectionStaticMethod;
 
 public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 
 	private final Context context;
 	private final Trees trees;
+	private final Names names;
 	
 	private MethodTree currentMethodTree; 
 	private int variablePos = 0;
@@ -39,6 +44,7 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 	public ReflectionGeneratorTreeScanner(JavacTask task) {
 		this.context = ((BasicJavacTask) task).getContext();
 		this.trees = Trees.instance(task);
+		this.names = Names.instance(context);
 	}
 	
 	@Override
@@ -50,20 +56,17 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 	@Override
 	public Void visitVariable(VariableTree variableTree, Void p) {
 		if(VERBOSE) System.out.println("VARIABLE: " + variableTree.getName());
-		
+				
 		if(!variableTree.getModifiers().getAnnotations().isEmpty()) {
 			for(AnnotationTree annotation : variableTree.getModifiers().getAnnotations()) {
-				if(annotation.getAnnotationType().toString().equals("ReflectionField")) {
+				if(annotation.getAnnotationType().toString().equals(ReflectionStaticField.class.getSimpleName())) {
 					
 					TreeMaker maker = createTreeMaker(context, currentMethodTree);
-					Names names = Names.instance(context);
-					
-					JCExpression fieldClassExpr = resolveName(maker, names, "java.lang.reflect.Field");
 										
 					JCExpression targetClass = getAnnotationValue(annotation, "targetClass");
 					
 					JCMethodInvocation getDeclaredField = maker.Apply(List.nil(), resolveName(maker, names, targetClass + ".getDeclaredField"), List.of(maker.Literal(variableTree.getName().toString())));
-					JCVariableDecl field = maker.VarDef(maker.Modifiers(0), names.fromString("field"), fieldClassExpr, getDeclaredField);
+					JCVariableDecl field = maker.VarDef(maker.Modifiers(0), names.fromString("field"), resolveName(maker, names, "java.lang.reflect.Field"), getDeclaredField);
 					
 					JCMethodInvocation setAccessible = maker.Apply(List.nil(), resolveName(maker, names, "field.setAccessible"), List.of(maker.Literal(true)));
 					JCExpressionStatement compiledSetAccessible = maker.Exec(setAccessible);
@@ -111,18 +114,15 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 		//Handle @ReflectionMethod
 		if(!methodTree.getModifiers().getAnnotations().isEmpty()) {
 			for(AnnotationTree annotation : methodTree.getModifiers().getAnnotations()) {
-				if(annotation.getAnnotationType().toString().equals("ReflectionMethod")) {
+				if(annotation.getAnnotationType().toString().equals(ReflectionStaticMethod.class.getSimpleName())) {
 					
 					TreeMaker maker = createTreeMaker(context, methodTree);
-					Names names = Names.instance(context);
-
-					JCExpression methodClassExpr = resolveName(maker, names, "java.lang.reflect.Method");
 
 					JCExpression targetClass = getAnnotationValue(annotation, "targetClass");
 					
 					JCMethodInvocation getDeclaredMethod = maker.Apply(List.nil(), resolveName(maker, names, targetClass + ".getDeclaredMethod"), List.of(maker.Literal(methodTree.getName().toString())));
 					
-					JCVariableDecl method = maker.VarDef(maker.Modifiers(0), names.fromString("method"), methodClassExpr, getDeclaredMethod);
+					JCVariableDecl method = maker.VarDef(maker.Modifiers(0), names.fromString("method"), resolveName(maker, names, "java.lang.reflect.Method"), getDeclaredMethod);
 					
 					JCMethodInvocation setAccessible = maker.Apply(List.nil(), resolveName(maker, names, "method.setAccessible"), List.of(maker.Literal(true)));
 					JCExpressionStatement compiledSetAccessible = maker.Exec(setAccessible);

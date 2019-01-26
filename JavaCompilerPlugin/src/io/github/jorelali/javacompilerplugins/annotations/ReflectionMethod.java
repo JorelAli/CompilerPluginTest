@@ -12,6 +12,6 @@ public @interface ReflectionMethod {
 
 	Class<?> targetClass();
 	boolean isPrivate() default false;
-	String withInstance() default "";
+	String withInstance();
 	
 }
