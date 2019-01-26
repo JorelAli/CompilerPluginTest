@@ -13,7 +13,6 @@ import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
-import com.sun.tools.javac.tree.JCTree.JCStatement;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
@@ -134,16 +133,16 @@ public class ASTHelper {
 		return newList;
 	}
 	
-	public static <A> List<A> listRemove(int index, List<A> originalList) {
-		List<A> newList = List.nil();
-		
-		for(int i = 0; i < originalList.size(); i++) {
-			if(i == index) {
-				continue;
-			}
-			newList = newList.append(originalList.get(i));
-		}
-		return newList;
-	}
+//	public static <A> List<A> listRemove(int index, List<A> originalList) {
+//		List<A> newList = List.nil();
+//		
+//		for(int i = 0; i < originalList.size(); i++) {
+//			if(i == index) {
+//				continue;
+//			}
+//			newList = newList.append(originalList.get(i));
+//		}
+//		return newList;
+//	}
 	
 }
