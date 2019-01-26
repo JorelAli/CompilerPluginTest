@@ -36,11 +36,6 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 		this.trees = Trees.instance(task);
 	}
 	
-	/*
-	 * TODO:
-	 * //Class instantiation with parameters
-	 */
-	
 	@Override
 	public Void visitCompilationUnit(CompilationUnitTree compilationUnitTree, Void p) {
 		if(VERBOSE) System.out.println("COMPUNIT: " + compilationUnitTree);
@@ -63,7 +58,7 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 	public Void visitMethod(MethodTree methodTree, Void p) {
 		if(VERBOSE) System.out.println("METHOD: " + methodTree.getName());
 		
-		
+		//Handle @ReflectionMethod
 		if(!methodTree.getModifiers().getAnnotations().isEmpty()) {
 			for(AnnotationTree annotation : methodTree.getModifiers().getAnnotations()) {
 				if(annotation.getAnnotationType().toString().equals("ReflectionMethod")) {
@@ -95,7 +90,6 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					System.out.println(logicBlock);
 					JCBlock block = (JCBlock) methodTree.getBody();
 					block.stats = block.stats.append(logicBlock);
-										
 				}
 			}	
 		}

@@ -1,17 +1,16 @@
 package io.github.jorelali.javacompilerplugins.annotations;
 
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.CLASS;
+import static java.lang.annotation.ElementType.LOCAL_VARIABLE;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(CLASS)
-@Target({ FIELD, LOCAL_VARIABLE, PARAMETER, TYPE })
+@Retention(RetentionPolicy.SOURCE)
+@Target({ LOCAL_VARIABLE })
 public @interface ReflectionField {
 
 	Class<?> targetClass();
-	String fieldName();
 	boolean isPrivate() default false;
 	
 }
