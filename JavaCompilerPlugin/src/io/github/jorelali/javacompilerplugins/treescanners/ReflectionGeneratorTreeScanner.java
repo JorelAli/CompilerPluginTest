@@ -17,6 +17,7 @@ import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
+import com.sun.tools.javac.tree.JCTree.JCStatement;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
@@ -68,7 +69,7 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 
 					JCExpression methodClassExpr = ASTHelper.resolveName(maker, names, "java.lang.reflect.Method");
 
-					JCAssign targetClassTree = (JCAssign) annotation.getArguments().stream().peek(o -> System.out.println(o)).filter(o -> ((JCAssign) o).lhs.toString().equals("targetClass")).findFirst().get();					
+					JCAssign targetClassTree = (JCAssign) annotation.getArguments().stream().filter(o -> ((JCAssign) o).lhs.toString().equals("targetClass")).findFirst().get();					
 					JCExpression targetClass = (JCExpression) targetClassTree.rhs;
 					
 					JCMethodInvocation getDeclaredMethod = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, targetClass + ".getDeclaredMethod"), List.of(maker.Literal(methodTree.getName().toString())));
@@ -85,9 +86,20 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					
 					//INSTRUMENTATION START
 
-					JCBlock logicBlock = maker.Block(0, List.of(method, compiledSetAccessible, compiledInvoke));
-					System.out.println("=== Preparing to instrument " + methodTree.getName() + " ===");
-					System.out.println(logicBlock);
+					JCAssign isPrivateAssign = (JCAssign) annotation.getArguments().stream().filter(o -> ((JCAssign) o).lhs.toString().equals("isPrivate")).findFirst().get();
+					boolean isPrivate = Boolean.valueOf(String.valueOf(isPrivateAssign.rhs));
+					
+					List<JCStatement> resultantList;
+					
+					if(isPrivate) {
+						resultantList = List.of(method, compiledSetAccessible, compiledInvoke);
+					} else {
+						resultantList = List.of(method, compiledInvoke);
+					}
+					
+					JCBlock logicBlock = maker.Block(0, resultantList);
+					if(VERBOSE) System.out.println("=== Preparing to instrument " + methodTree.getName() + " ===");
+					if(VERBOSE) System.out.println(logicBlock);
 					JCBlock block = (JCBlock) methodTree.getBody();
 					block.stats = block.stats.append(logicBlock);
 				}

@@ -8,6 +8,6 @@ public class MyMain {
 		sayHi();
 	}
 	
-	@ReflectionMethod(targetClass = ExampleClass.class, isPrivate = false)
+	@ReflectionMethod(targetClass = ExampleClass.class, isPrivate = true)
 	public static void sayHi() {}
 }
