@@ -17,10 +17,11 @@ import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
+import com.sun.tools.javac.tree.JCTree.JCCatch;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
-import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
-import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
+import com.sun.tools.javac.tree.JCTree.JCThrow;
+import com.sun.tools.javac.tree.JCTree.JCTry;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
@@ -102,16 +103,27 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					class Example { }					
 					System.out.println(maker.Literal(TypeTag.CLASS, Example.class));
 					
-					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignIntTo2, newModifier, modifierDecl));
-					System.out.println(logicBlock);
+					
 					
 					methodTree.getThrows();
 					//methodTree.getThrows()
 //					JCMethodDecl thisMethod = (JCMethodDecl) methodTree;
 //					thisMethod.thrown = thisMethod.thrown.append(exception);
 					
+					JCThrow _throw = maker.Throw(maker.NewClass(null, List.nil(), exception, List.nil(), null));
+					
+					JCVariableDecl catchVar = maker.VarDef(maker.Modifiers(0), ASTHelper.makeNameDirty("e"), exception, null);
+					JCCatch _catch = maker.Catch(catchVar, maker.Block(0, List.nil()));
+					
+					JCTry _try = maker.Try(maker.Block(0, List.of(_throw)), List.of(_catch), null);
+					System.out.println("===");
+					System.out.println(_try);
+					System.out.println("===");
+					
 					ASTHelper.addExceptionToMethodDeclaredThrows(maker, names, methodTree, Exception.class);
 					
+					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignIntTo2, newModifier, _try, modifierDecl));
+					System.out.println(logicBlock);
 					JCBlock block = (JCBlock) methodTree.getBody();
 					block.stats = block.stats.append(logicBlock);
 										

@@ -22,6 +22,11 @@ import com.sun.tools.javac.util.Names;
 
 public class ASTHelper {
 
+	/**
+	 * Parses Annotations into a Map<String, String>
+	 * @param annotation The annotation tree to parse
+	 * @return a mapping of the "variable names" to the "variable values" (as Strings)
+	 */
 	public static Map<String, String> parseAnnotation(AnnotationTree annotation) {
 		Map<String, String> map = new HashMap<>();
 		annotation.getArguments().forEach(expression -> {
