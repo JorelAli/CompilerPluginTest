@@ -1,5 +1,4 @@
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import io.github.jorelali.javacompilerplugins.annotations.ReflectionField;
@@ -47,9 +46,12 @@ public class MyMain {
 	
 	@ReflectionMethod(targetClass = ExampleClass.class)
 	public void sayHi() {
-		
-		
+
 		//reflection to run ExampleClass.sayHi();
+	}
+	
+	public void myMethod() {
+		System.out.println("hello!");
 	}
 	
 	

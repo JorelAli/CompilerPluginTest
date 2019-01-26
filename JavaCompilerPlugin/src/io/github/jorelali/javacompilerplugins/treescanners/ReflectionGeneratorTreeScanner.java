@@ -9,8 +9,11 @@ import static io.github.jorelali.javacompilerplugins.ASTHelper.parseAnnotation;
 import java.util.Map;
 
 import com.sun.source.tree.AnnotationTree;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.VariableTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
@@ -20,6 +23,8 @@ import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCCatch;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
+import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
+import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import com.sun.tools.javac.tree.JCTree.JCThrow;
 import com.sun.tools.javac.tree.JCTree.JCTry;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
@@ -36,6 +41,8 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 	private final Trees trees;
 	private CompilationUnitTree currentCompilationUnitTree;
 	
+	private static final boolean VERBOSE = false;
+	
 	public ReflectionGeneratorTreeScanner(JavacTask task) {
 		this.context = ((BasicJavacTask) task).getContext();
 		this.trees = Trees.instance(task);
@@ -50,12 +57,27 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 	
 	@Override
 	public Void visitCompilationUnit(CompilationUnitTree compilationUnitTree, Void p) {
+		if(VERBOSE) System.out.println("COMPUNIT: " + compilationUnitTree);
 		currentCompilationUnitTree = compilationUnitTree;
 		return super.visitCompilationUnit(compilationUnitTree, p);
 	}
 	
 	@Override
+	public Void visitClass(ClassTree classTree, Void p) {
+		if(VERBOSE) System.out.println("CLASS: " + classTree.getSimpleName());
+		return super.visitClass(classTree, p);
+	}
+	
+	@Override
+	public Void visitVariable(VariableTree variableTree, Void p) {
+		if(VERBOSE) System.out.println("VARIABLE: " + variableTree.getName());
+		return super.visitVariable(variableTree, p);
+	}
+	
+	@Override
 	public Void visitMethod(MethodTree methodTree, Void p) {
+		if(VERBOSE) System.out.println("METHOD: " + methodTree.getName());
+		
 		
 		if(!methodTree.getModifiers().getAnnotations().isEmpty()) {
 			for(AnnotationTree annotation : methodTree.getModifiers().getAnnotations()) {
@@ -104,31 +126,49 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					System.out.println(maker.Literal(TypeTag.CLASS, Example.class));
 					
 					
-					
-					methodTree.getThrows();
 					//methodTree.getThrows()
 //					JCMethodDecl thisMethod = (JCMethodDecl) methodTree;
 //					thisMethod.thrown = thisMethod.thrown.append(exception);
 					
-					JCThrow _throw = maker.Throw(maker.NewClass(null, List.nil(), exception, List.nil(), null));
+//					JCThrow _throw = maker.Throw(maker.NewClass(null, List.nil(), exception, List.nil(), null));
+//					
+//					JCVariableDecl catchVar = maker.VarDef(maker.Modifiers(0), ASTHelper.makeNameDirty("e"), exception, null);
+//					JCCatch _catch = maker.Catch(catchVar, maker.Block(0, List.nil()));
+//					
+//					JCTry _try = maker.Try(maker.Block(0, List.of(_throw)), List.of(_catch), null);
+//					System.out.println("===");
+//					System.out.println(_try);
+//					System.out.println("===");
 					
-					JCVariableDecl catchVar = maker.VarDef(maker.Modifiers(0), ASTHelper.makeNameDirty("e"), exception, null);
-					JCCatch _catch = maker.Catch(catchVar, maker.Block(0, List.nil()));
+					System.out.println("");
 					
-					JCTry _try = maker.Try(maker.Block(0, List.of(_throw)), List.of(_catch), null);
-					System.out.println("===");
-					System.out.println(_try);
-					System.out.println("===");
+					JCExpression out = ASTHelper.resolveName(maker, names, "java.lang.System.out");
+					JCFieldAccess f = (JCFieldAccess) ASTHelper.resolveName(maker, names, "java.lang.System.out");
+					System.out.println(f);
+					
+					//= maker.Apply(List.<JCExpression>nil(), factoryMethod, List.<JCExpression>of(loggerName));
+					
+					
+					JCMethodInvocation m = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "java.lang.System.out.println"), List.of(
+							
+							maker.Literal("hello!")
+							
+							));
+					System.out.println(m);
+					
+					
 					
 					ASTHelper.addExceptionToMethodDeclaredThrows(maker, names, methodTree, Exception.class);
 					
-					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignIntTo2, newModifier, _try, modifierDecl));
+					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignIntTo2, newModifier,/* _try,*/ modifierDecl, maker.Exec(m)));
+					System.out.println("=== Preparing to instrument " + methodTree.getName() + " ===");
 					System.out.println(logicBlock);
 					JCBlock block = (JCBlock) methodTree.getBody();
 					block.stats = block.stats.append(logicBlock);
 										
 				}
 			}
+			
 		}
 		
 		

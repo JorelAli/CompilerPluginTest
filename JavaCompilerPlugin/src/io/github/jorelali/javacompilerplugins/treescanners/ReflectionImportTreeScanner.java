@@ -8,6 +8,7 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.tree.JCTree.JCImport;
 import com.sun.tools.javac.util.Context;
 
 public class ReflectionImportTreeScanner extends TreeScanner<Void, Void> {
@@ -30,7 +31,10 @@ public class ReflectionImportTreeScanner extends TreeScanner<Void, Void> {
 	@Override
 	public Void visitImport(ImportTree importTree, Void parameter) {
 		if(importTree.toString().startsWith("import java.lang.reflect")) {
-			trees.printMessage(Diagnostic.Kind.MANDATORY_WARNING, "Reflection detected, consider not using reflection", importTree, currentCompilationUnitTree);
+			JCImport t = (JCImport) importTree;
+			t.pos += "import java.lang.reflect.".length();
+			
+			trees.printMessage(Diagnostic.Kind.MANDATORY_WARNING, "Reflection detected, consider not using reflection", t, currentCompilationUnitTree);
 		}
 		return super.visitImport(importTree, parameter);
 	}

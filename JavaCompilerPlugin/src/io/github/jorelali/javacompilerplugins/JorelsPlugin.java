@@ -22,14 +22,14 @@ public class JorelsPlugin implements Plugin {
 			@Override
 			public void finished(TaskEvent taskEvent) {
 				if (taskEvent.getKind() == TaskEvent.Kind.PARSE) {
-					taskEvent.getCompilationUnit().accept(new ReflectionImportTreeScanner(task), null);
+					//taskEvent.getCompilationUnit().accept(new ReflectionImportTreeScanner(task), null);
 					taskEvent.getCompilationUnit().accept(new ReflectionGeneratorTreeScanner(task), null);
 					//taskEvent.getCompilationUnit().accept(new TestingTreeScanner(task), null);
 				}
 			}
 
 			@Override
-			public void started(TaskEvent var1) {}
+			public void started(TaskEvent taskEvent) {}
 		});
 	}
 
