@@ -13,6 +13,7 @@ import com.sun.tools.javac.tree.JCTree.JCAssign;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
+import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
@@ -131,6 +132,11 @@ public class ASTHelper {
 				String topElement = identNamesStack.pop();
 				return maker.Select(resolveName(maker, names, String.join(".", identNamesStack)), names.fromString(topElement));
 		}
+	}
+	
+	public static JCExpressionStatement createSysout(TreeMaker maker, Names names, String string) {
+		JCMethodInvocation m = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "java.lang.System.out.println"), List.of(maker.Literal(string)));
+		return maker.Exec(m);
 	}
 	
 	// Arg 1 is the enclosing class, but we won't instantiate an inner class.
