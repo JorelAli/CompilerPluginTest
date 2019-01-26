@@ -2,9 +2,10 @@ package io.github.jorelali.javacompilerplugins.treescanners;
 
 import static io.github.jorelali.javacompilerplugins.ASTHelper.createTreeMaker;
 
+import java.util.Map;
+
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
-import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.JavacTask;
@@ -30,17 +31,15 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 
 	private final Context context;
 	private final Trees trees;
-	private static final boolean VERBOSE = false;
+	
+	private MethodTree currentMethodTree; 
+	private Map<JCVariableDecl, Integer> variablePositions;
+	int variablePos = 0;
+	private static final boolean VERBOSE = true;
 	
 	public ReflectionGeneratorTreeScanner(JavacTask task) {
 		this.context = ((BasicJavacTask) task).getContext();
 		this.trees = Trees.instance(task);
-	}
-	
-	@Override
-	public Void visitCompilationUnit(CompilationUnitTree compilationUnitTree, Void p) {
-		if(VERBOSE) System.out.println("COMPUNIT: " + compilationUnitTree);
-		return super.visitCompilationUnit(compilationUnitTree, p);
 	}
 	
 	@Override
@@ -52,13 +51,58 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 	@Override
 	public Void visitVariable(VariableTree variableTree, Void p) {
 		if(VERBOSE) System.out.println("VARIABLE: " + variableTree.getName());
+		
+		if(!variableTree.getModifiers().getAnnotations().isEmpty()) {
+			for(AnnotationTree annotation : variableTree.getModifiers().getAnnotations()) {
+				if(annotation.getAnnotationType().toString().equals("ReflectionField")) {
+					
+					JCVariableDecl dec = (JCVariableDecl) variableTree;
+					//System.out.println("Instrumenting@" + variablePositions.get(dec));
+					//TreeMaker maker = TreeMaker.instance(context).at(variablePositions.get(dec));
+					
+					TreeMaker maker = createTreeMaker(context, currentMethodTree);
+					Names names = Names.instance(context);
+					
+					JCExpression fieldClassExpr = ASTHelper.resolveName(maker, names, "java.lang.reflect.Field");
+					
+					JCAssign targetClassTree = (JCAssign) annotation.getArguments().stream().filter(o -> ((JCAssign) o).lhs.toString().equals("targetClass")).findFirst().get();					
+					JCExpression targetClass = (JCExpression) targetClassTree.rhs;
+					
+					JCMethodInvocation getDeclaredField = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, targetClass + ".getDeclaredField"), List.of(maker.Literal(variableTree.getName().toString())));
+					JCVariableDecl field = maker.VarDef(maker.Modifiers(0), names.fromString("field"), fieldClassExpr, getDeclaredField);
+					
+					JCMethodInvocation setAccessible = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "field.setAccessible"), List.of(maker.Literal(true)));
+					JCExpressionStatement compiledSetAccessible = maker.Exec(setAccessible);
+					
+					JCMethodInvocation invoke = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "field.get"), List.of(maker.Literal(TypeTag.BOT, null)));
+					JCExpressionStatement compiledInvoke = maker.Exec(invoke);
+					
+					ASTHelper.addExceptionToMethodDeclaredThrows(maker, names, currentMethodTree, Exception.class);
+					List<JCStatement> resultantList = List.of(field, compiledSetAccessible, compiledInvoke);
+					
+					JCBlock logicBlock = maker.Block(0, resultantList);
+					if(VERBOSE) System.out.println("=== Preparing to instrument " + variableTree.getName() + " ===");
+					if(VERBOSE) System.out.println(logicBlock);
+					JCBlock block = (JCBlock) currentMethodTree.getBody();
+					//block.stats = block.stats.append(logicBlock);
+					block.stats = ASTHelper.insert(variablePos, logicBlock, block.stats);
+					//block.stats.addAll(variablePos, List.of(logicBlock));
+					
+				}
+			}
+		}
+		
+		variablePos++;
 		return super.visitVariable(variableTree, p);
 	}
 	
 	@Override
 	public Void visitMethod(MethodTree methodTree, Void p) {
+		this.currentMethodTree = methodTree;
+		this.variablePositions = ASTHelper.mapVariablePositions(methodTree);
+		variablePos = 0;
 		if(VERBOSE) System.out.println("METHOD: " + methodTree.getName());
-		
+		System.out.println(ASTHelper.methodPosition(methodTree));
 		//Handle @ReflectionMethod
 		if(!methodTree.getModifiers().getAnnotations().isEmpty()) {
 			for(AnnotationTree annotation : methodTree.getModifiers().getAnnotations()) {

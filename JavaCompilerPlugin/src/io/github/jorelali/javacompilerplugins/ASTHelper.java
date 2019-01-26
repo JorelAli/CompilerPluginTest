@@ -1,15 +1,19 @@
 package io.github.jorelali.javacompilerplugins;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
+import com.sun.tools.javac.tree.JCTree.JCStatement;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
@@ -22,7 +26,7 @@ public class ASTHelper {
 	 * Gets a MethodTree's current position
 	 * @return The current position of a Method Tree
 	 */
-	private static int methodPosition(MethodTree methodTree) {
+	public static int methodPosition(MethodTree methodTree) {
 		return ((JCMethodDecl) methodTree).pos;
 	}
 	
@@ -103,6 +107,46 @@ public class ASTHelper {
 	// Arg 5 is a class body, for creating an anonymous class.
 	public static JCExpressionStatement newClassInstanceWithNoParamsOrGenerics(TreeMaker maker, Names names, String fullClassNameWithPath) {
 		return maker.Exec(maker.NewClass(null, List.nil(), resolveName(maker, names, fullClassNameWithPath), List.nil(), null));
+	}
+	
+	public static Map<JCVariableDecl, Integer> mapVariablePositions(MethodTree methodTree) {
+		Map<JCVariableDecl, Integer> map = new HashMap<>();
+		
+		JCMethodDecl method = (JCMethodDecl) methodTree;
+		method.body.stats.forEach(statement -> {
+			if(statement.getKind().equals(Tree.Kind.VARIABLE)) {
+				map.put((JCVariableDecl) statement, statement.pos);
+			}
+		});
+		return map;
+	}
+	
+	public static <A> List<A> insert(int index, A object, List<A> originalList) {
+		
+		System.out.println(index);
+		
+		
+		List<A> newList = List.nil();
+		int oldListCounter = 0;
+		while(oldListCounter != index) {
+			newList = newList.append(originalList.get(oldListCounter++));
+		}
+		newList = newList.append(object);
+		while(originalList.size() != oldListCounter) {
+			newList = newList.append(originalList.get(oldListCounter++));
+		}
+		return newList;
+		
+//		for(int i = 0; i < originalList.size() + i; i++) {
+//			
+//			if(i == index) {
+//				newList = newList.append(object);
+//			}
+//		}
+		
+		
+//		return null;
+		
 	}
 	
 }
