@@ -12,5 +12,6 @@ public @interface ReflectionField {
 
 	Class<?> targetClass();
 	boolean isPrivate() default false;
+	String withInstance() default "";
 	
 }

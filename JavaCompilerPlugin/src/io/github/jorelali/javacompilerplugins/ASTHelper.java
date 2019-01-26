@@ -6,9 +6,11 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.TypeTag;
+import com.sun.tools.javac.tree.JCTree.JCAssign;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
@@ -131,6 +133,10 @@ public class ASTHelper {
 			newList = newList.append(originalList.get(oldListCounter++));
 		}
 		return newList;
+	}
+	
+	public static JCExpression getAnnotationValue(AnnotationTree annotation, String lhs) {
+		return ((JCAssign) annotation.getArguments().stream().filter(o -> ((JCAssign) o).lhs.toString().equals(lhs)).findFirst().get()).rhs;
 	}
 	
 //	public static <A> List<A> listRemove(int index, List<A> originalList) {

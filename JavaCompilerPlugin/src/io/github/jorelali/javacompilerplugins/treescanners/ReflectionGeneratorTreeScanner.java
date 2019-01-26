@@ -11,6 +11,7 @@ import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.TypeTag;
+import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCAssign;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
@@ -24,7 +25,7 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 
-import io.github.jorelali.javacompilerplugins.ASTHelper;
+import static io.github.jorelali.javacompilerplugins.ASTHelper.*;
 
 public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 
@@ -57,33 +58,42 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					TreeMaker maker = createTreeMaker(context, currentMethodTree);
 					Names names = Names.instance(context);
 					
-					JCExpression fieldClassExpr = ASTHelper.resolveName(maker, names, "java.lang.reflect.Field");
+					JCExpression fieldClassExpr = resolveName(maker, names, "java.lang.reflect.Field");
+										
+					JCExpression targetClass = getAnnotationValue(annotation, "targetClass");
 					
-					JCAssign targetClassTree = (JCAssign) annotation.getArguments().stream().filter(o -> ((JCAssign) o).lhs.toString().equals("targetClass")).findFirst().get();					
-					JCExpression targetClass = (JCExpression) targetClassTree.rhs;
-					
-					JCMethodInvocation getDeclaredField = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, targetClass + ".getDeclaredField"), List.of(maker.Literal(variableTree.getName().toString())));
+					JCMethodInvocation getDeclaredField = maker.Apply(List.nil(), resolveName(maker, names, targetClass + ".getDeclaredField"), List.of(maker.Literal(variableTree.getName().toString())));
 					JCVariableDecl field = maker.VarDef(maker.Modifiers(0), names.fromString("field"), fieldClassExpr, getDeclaredField);
 					
-					JCMethodInvocation setAccessible = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "field.setAccessible"), List.of(maker.Literal(true)));
+					JCMethodInvocation setAccessible = maker.Apply(List.nil(), resolveName(maker, names, "field.setAccessible"), List.of(maker.Literal(true)));
 					JCExpressionStatement compiledSetAccessible = maker.Exec(setAccessible);
 					
-					JCMethodInvocation invoke = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "field.get"), List.of(maker.Literal(TypeTag.BOT, null)));
+					JCMethodInvocation invoke = maker.Apply(List.nil(), resolveName(maker, names, "field.get"), List.of(maker.Literal(TypeTag.BOT, null)));
 					JCExpressionStatement compiledInvoke = maker.Exec(invoke);
 					
 					JCVariableDecl dec = (JCVariableDecl) variableTree;
 					JCTypeCast typeCast = maker.TypeCast(dec.getType(), compiledInvoke.getExpression());
 					JCAssign assignVal = maker.Assign(maker.Ident(dec.name), typeCast);
 					
-					ASTHelper.addExceptionToMethodDeclaredThrows(maker, names, currentMethodTree, Exception.class);
-					List<JCStatement> resultantList = List.of(field, compiledSetAccessible, maker.Exec(assignVal));
+					addExceptionToMethodDeclaredThrows(maker, names, currentMethodTree, Exception.class);
+					
+					boolean isPrivate = Boolean.valueOf(String.valueOf(getAnnotationValue(annotation, "isPrivate")));
+					
+					List<JCStatement> resultantList;
+					
+					if(isPrivate) {
+						resultantList = List.of(field, compiledSetAccessible, maker.Exec(assignVal));
+					} else {
+						resultantList = List.of(field, maker.Exec(assignVal));
+					}
+					
 					
 					JCBlock logicBlock = maker.Block(0, resultantList);
 					if(VERBOSE) System.out.println("=== Preparing to instrument variable" + variableTree.getName() + " ===");
 					if(VERBOSE) System.out.println(logicBlock);
 					
 					JCBlock block = (JCBlock) currentMethodTree.getBody();
-					block.stats = ASTHelper.listInsert(variablePos, logicBlock, block.stats);
+					block.stats = listInsert(variablePos, logicBlock, block.stats);
 				}
 			}
 		}
@@ -106,27 +116,25 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					TreeMaker maker = createTreeMaker(context, methodTree);
 					Names names = Names.instance(context);
 
-					JCExpression methodClassExpr = ASTHelper.resolveName(maker, names, "java.lang.reflect.Method");
+					JCExpression methodClassExpr = resolveName(maker, names, "java.lang.reflect.Method");
 
-					JCAssign targetClassTree = (JCAssign) annotation.getArguments().stream().filter(o -> ((JCAssign) o).lhs.toString().equals("targetClass")).findFirst().get();					
-					JCExpression targetClass = (JCExpression) targetClassTree.rhs;
+					JCExpression targetClass = getAnnotationValue(annotation, "targetClass");
 					
-					JCMethodInvocation getDeclaredMethod = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, targetClass + ".getDeclaredMethod"), List.of(maker.Literal(methodTree.getName().toString())));
+					JCMethodInvocation getDeclaredMethod = maker.Apply(List.nil(), resolveName(maker, names, targetClass + ".getDeclaredMethod"), List.of(maker.Literal(methodTree.getName().toString())));
 					
 					JCVariableDecl method = maker.VarDef(maker.Modifiers(0), names.fromString("method"), methodClassExpr, getDeclaredMethod);
 					
-					JCMethodInvocation setAccessible = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "method.setAccessible"), List.of(maker.Literal(true)));
+					JCMethodInvocation setAccessible = maker.Apply(List.nil(), resolveName(maker, names, "method.setAccessible"), List.of(maker.Literal(true)));
 					JCExpressionStatement compiledSetAccessible = maker.Exec(setAccessible);
 					
-					JCMethodInvocation invoke = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "method.invoke"), List.of(maker.Literal(TypeTag.BOT, null)));
+					JCMethodInvocation invoke = maker.Apply(List.nil(), resolveName(maker, names, "method.invoke"), List.of(maker.Literal(TypeTag.BOT, null)));
 					JCExpressionStatement compiledInvoke = maker.Exec(invoke);
 					
-					ASTHelper.addExceptionToMethodDeclaredThrows(maker, names, methodTree, Exception.class);
+					addExceptionToMethodDeclaredThrows(maker, names, methodTree, Exception.class);
 					
 					//INSTRUMENTATION START
 
-					JCAssign isPrivateAssign = (JCAssign) annotation.getArguments().stream().filter(o -> ((JCAssign) o).lhs.toString().equals("isPrivate")).findFirst().get();
-					boolean isPrivate = Boolean.valueOf(String.valueOf(isPrivateAssign.rhs));
+					boolean isPrivate = Boolean.valueOf(String.valueOf(getAnnotationValue(annotation, "isPrivate")));
 					
 					List<JCStatement> resultantList;
 					

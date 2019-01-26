@@ -1,7 +1,7 @@
 @SuppressWarnings("unused")
 public class ExampleClass {
 
-	private String myString = "hello";
+	private static String myString = "hello";
 
 	private static void sayHi() {
 		System.out.println("Hi!");

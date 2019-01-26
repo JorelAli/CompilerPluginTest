@@ -5,7 +5,8 @@ public class MyMain {
 
 	public static void main(String[] args) throws Exception {
 		
-		@ReflectionField(targetClass = ExampleClass.class) String myString = null;
+		@ReflectionField(targetClass = ExampleClass.class, isPrivate = true) String myString = null;
+		
 		System.out.println(myString);
 		
 		sayHi();
