@@ -130,12 +130,29 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 //					JCExpressionStatement compiledSetAccessible = maker.Exec(setAccessible);
 //					System.out.println(compiledSetAccessible);
 					
+					
+					
+					/* method.invoke(null); */
+					/*
+					 * Note: This is ONLY for static methods!
+					 */
+					
+					JCMethodInvocation invoke = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "method.invoke"), List.of(maker.Literal(TypeTag.BOT, null)));
+					JCExpressionStatement compiledInvoke = maker.Exec(invoke);
+					System.out.println(compiledInvoke);
+					System.out.println(compiledInvoke);
+					
+					
+					
+					
+					
+					
 					System.out.println("\n\n");
 					
 					
 					
 					
-					
+					//REST OF LINE IGNORED
 					
 					
 					
@@ -150,14 +167,14 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					
 					
 					JCVariableDecl declareInt = createLocalPrimitiveVariable(maker, "hello", TypeTag.INT, maker.Literal(TypeTag.INT, 0));
-					System.out.println(declareInt);
+					//System.out.println(declareInt);
 					JCExpressionStatement assignIntTo2 = createAssignment(maker, declareInt, maker.Literal(TypeTag.INT, 2));
 					JCExpressionStatement newModifier = newClassInstanceWithNoParamsOrGenerics(maker, names, "java.lang.reflect.Modifier");
 					
 					JCExpression modifierExpr = ASTHelper.resolveName(maker, names, "java.lang.reflect.Modifier");
 					
 					JCVariableDecl modifierDecl = maker.VarDef(maker.Modifiers(0), ASTHelper.makeNameDirty("myModifier"), modifierExpr, maker.NewClass(null, List.nil(), modifierExpr, List.nil(), null));
-					System.out.println(modifierDecl);
+					//System.out.println(modifierDecl);
 					
 					JCExpression exception = ASTHelper.resolveName(maker, names, "java.lang.Exception");
 					
@@ -173,7 +190,7 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 
 					
 					class Example { }					
-					System.out.println(maker.Literal(TypeTag.CLASS, Example.class));
+					//System.out.println(maker.Literal(TypeTag.CLASS, Example.class));
 					
 					
 					//methodTree.getThrows()
@@ -190,23 +207,29 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 //					System.out.println(_try);
 //					System.out.println("===");
 					
-					System.out.println("");
+					//System.out.println("");
 					
 					JCExpression out = ASTHelper.resolveName(maker, names, "java.lang.System.out");
 					JCFieldAccess f = (JCFieldAccess) ASTHelper.resolveName(maker, names, "java.lang.System.out");
-					System.out.println(f);
+					//System.out.println(f);
 					
 					//= maker.Apply(List.<JCExpression>nil(), factoryMethod, List.<JCExpression>of(loggerName));
 					
 					
 					JCMethodInvocation m = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "java.lang.System.out.println"), List.of(maker.Literal("hello!")));
-					System.out.println(m);
+					//System.out.println(m);
 					
 					
 					
 					ASTHelper.addExceptionToMethodDeclaredThrows(maker, names, methodTree, Exception.class);
 					
-					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignIntTo2, newModifier,/* _try,*/ modifierDecl, maker.Exec(m), method, compiledSetAccessible));
+					
+					//INSTRUMENTATION START
+					
+					
+					
+					
+					JCBlock logicBlock = maker.Block(0, List.of(/*declareInt, assignIntTo2, newModifier,/* _try,*//* modifierDecl, maker.Exec(m), */method, compiledSetAccessible, compiledInvoke));
 					System.out.println("=== Preparing to instrument " + methodTree.getName() + " ===");
 					System.out.println(logicBlock);
 					JCBlock block = (JCBlock) methodTree.getBody();
