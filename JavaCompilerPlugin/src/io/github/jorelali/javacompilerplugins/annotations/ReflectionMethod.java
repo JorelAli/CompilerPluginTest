@@ -1,12 +1,12 @@
 package io.github.jorelali.javacompilerplugins.annotations;
 
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.CLASS;
+import static java.lang.annotation.ElementType.METHOD;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(CLASS)
+@Retention(RetentionPolicy.SOURCE)
 @Target({ METHOD })
 public @interface ReflectionMethod {
 

@@ -1,3 +1,4 @@
+@SuppressWarnings("unused")
 public class ExampleClass {
 
 	private String myString = "hello";
