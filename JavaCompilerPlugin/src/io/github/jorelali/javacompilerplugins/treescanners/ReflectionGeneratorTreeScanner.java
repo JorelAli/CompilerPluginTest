@@ -28,6 +28,7 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 
+import io.github.jorelali.javacompilerplugins.annotations.ReflectionField;
 import io.github.jorelali.javacompilerplugins.annotations.ReflectionStaticField;
 import io.github.jorelali.javacompilerplugins.annotations.ReflectionStaticMethod;
 
@@ -39,7 +40,7 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 	
 	private MethodTree currentMethodTree; 
 	private int variablePos = 0;
-	private static final boolean VERBOSE = false;
+	private static final boolean VERBOSE = true;
 	
 	public ReflectionGeneratorTreeScanner(JavacTask task) {
 		this.context = ((BasicJavacTask) task).getContext();
@@ -92,11 +93,58 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					
 					
 					JCBlock logicBlock = maker.Block(0, resultantList);
-					if(VERBOSE) System.out.println("=== Preparing to instrument variable" + variableTree.getName() + " ===");
+					if(VERBOSE) System.out.println("=== Preparing to instrument variable " + variableTree.getName() + " ===");
 					if(VERBOSE) System.out.println(logicBlock);
 					
 					JCBlock block = (JCBlock) currentMethodTree.getBody();
 					block.stats = listInsert(variablePos, logicBlock, block.stats);
+					variablePos+=2;
+				}
+				if(annotation.getAnnotationType().toString().equals(ReflectionField.class.getSimpleName())) {
+					
+					TreeMaker maker = createTreeMaker(context, currentMethodTree);
+										
+					JCExpression targetClass = getAnnotationValue(annotation, "targetClass");
+					
+					JCMethodInvocation getDeclaredField = maker.Apply(List.nil(), resolveName(maker, names, targetClass + ".getDeclaredField"), List.of(maker.Literal(variableTree.getName().toString())));
+					JCVariableDecl field = maker.VarDef(maker.Modifiers(0), names.fromString("field"), resolveName(maker, names, "java.lang.reflect.Field"), getDeclaredField);
+					
+					JCMethodInvocation setAccessible = maker.Apply(List.nil(), resolveName(maker, names, "field.setAccessible"), List.of(maker.Literal(true)));
+					JCExpressionStatement compiledSetAccessible = maker.Exec(setAccessible);
+					
+					String instanceStr = String.valueOf(getAnnotationValue(annotation, "withInstance"));
+					instanceStr = instanceStr.substring(1, instanceStr.length() - 1);
+					
+					//
+					JCMethodInvocation invoke = maker.Apply(List.nil(), resolveName(maker, names, "field.get"), List.of(maker.Ident(names.fromString(instanceStr))));
+					JCExpressionStatement compiledInvoke = maker.Exec(invoke);
+					System.out.println("->" + compiledInvoke);
+					
+					JCVariableDecl dec = (JCVariableDecl) variableTree;
+					JCTypeCast typeCast = maker.TypeCast(dec.getType(), compiledInvoke.getExpression());
+					JCAssign assignVal = maker.Assign(maker.Ident(dec.name), typeCast);
+					
+					addExceptionToMethodDeclaredThrows(maker, names, currentMethodTree, Exception.class);
+					
+					boolean isPrivate = Boolean.valueOf(String.valueOf(getAnnotationValue(annotation, "isPrivate")));
+					
+					List<JCStatement> resultantList;
+					
+					if(isPrivate) {
+						resultantList = List.of(field, compiledSetAccessible, maker.Exec(assignVal));
+					} else {
+						resultantList = List.of(field, maker.Exec(assignVal));
+					}
+					
+					
+					JCBlock logicBlock = maker.Block(0, resultantList);
+					if(VERBOSE) System.out.println("=== Preparing to instrument variable " + variableTree.getName() + " ===");
+					if(VERBOSE) System.out.println(logicBlock);
+					
+					JCBlock block = (JCBlock) currentMethodTree.getBody();
+					block.stats = listInsert(variablePos, logicBlock, block.stats);
+					block.stats.forEach(System.out::println);
+					variablePos+=2;
 				}
 			}
 		}

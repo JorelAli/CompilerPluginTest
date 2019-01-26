@@ -1,3 +1,4 @@
+import io.github.jorelali.javacompilerplugins.annotations.ReflectionField;
 import io.github.jorelali.javacompilerplugins.annotations.ReflectionStaticField;
 import io.github.jorelali.javacompilerplugins.annotations.ReflectionStaticMethod;
 
@@ -8,6 +9,10 @@ public class MyMain {
 		@ReflectionStaticField(targetClass = ExampleClass.class, isPrivate = true) String myString = null;
 		
 		System.out.println(myString);
+		
+		ExampleClass instance = new ExampleClass();
+		@ReflectionField(targetClass = ExampleClass.class, withInstance = "instance", isPrivate = true) String nonStaticString = null;
+		System.out.println(nonStaticString);
 		
 		sayHi();
 	}
