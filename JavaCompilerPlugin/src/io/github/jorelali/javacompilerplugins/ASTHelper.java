@@ -121,11 +121,7 @@ public class ASTHelper {
 		return map;
 	}
 	
-	public static <A> List<A> insert(int index, A object, List<A> originalList) {
-		
-		System.out.println(index);
-		
-		
+	public static <A> List<A> listInsert(int index, A object, List<A> originalList) {
 		List<A> newList = List.nil();
 		int oldListCounter = 0;
 		while(oldListCounter != index) {
@@ -136,17 +132,18 @@ public class ASTHelper {
 			newList = newList.append(originalList.get(oldListCounter++));
 		}
 		return newList;
+	}
+	
+	public static <A> List<A> listRemove(int index, List<A> originalList) {
+		List<A> newList = List.nil();
 		
-//		for(int i = 0; i < originalList.size() + i; i++) {
-//			
-//			if(i == index) {
-//				newList = newList.append(object);
-//			}
-//		}
-		
-		
-//		return null;
-		
+		for(int i = 0; i < originalList.size(); i++) {
+			if(i == index) {
+				continue;
+			}
+			newList = newList.append(originalList.get(i));
+		}
+		return newList;
 	}
 	
 }

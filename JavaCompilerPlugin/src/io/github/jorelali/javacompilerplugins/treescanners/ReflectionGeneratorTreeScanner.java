@@ -19,6 +19,7 @@ import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import com.sun.tools.javac.tree.JCTree.JCStatement;
+import com.sun.tools.javac.tree.JCTree.JCTypeCast;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
@@ -33,9 +34,8 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 	private final Trees trees;
 	
 	private MethodTree currentMethodTree; 
-	private Map<JCVariableDecl, Integer> variablePositions;
 	int variablePos = 0;
-	private static final boolean VERBOSE = true;
+	private static final boolean VERBOSE = false;
 	
 	public ReflectionGeneratorTreeScanner(JavacTask task) {
 		this.context = ((BasicJavacTask) task).getContext();
@@ -77,15 +77,27 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					JCMethodInvocation invoke = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "field.get"), List.of(maker.Literal(TypeTag.BOT, null)));
 					JCExpressionStatement compiledInvoke = maker.Exec(invoke);
 					
+					JCTypeCast z = maker.TypeCast(dec.getType(), compiledInvoke.getExpression());
+					System.out.println("==> " + z);
+					System.out.println("\n\n");
+					
+					//				    JCAssign assign = maker.Assign(maker.Ident(declareInt.name), maker.Literal(TypeTag.INT, 2));
+					JCAssign assignVal = maker.Assign(maker.Ident(dec.name), z);
+					
 					ASTHelper.addExceptionToMethodDeclaredThrows(maker, names, currentMethodTree, Exception.class);
-					List<JCStatement> resultantList = List.of(field, compiledSetAccessible, compiledInvoke);
+					List<JCStatement> resultantList = List.of(field, compiledSetAccessible, compiledInvoke, maker.Exec(assignVal));
 					
 					JCBlock logicBlock = maker.Block(0, resultantList);
-					if(VERBOSE) System.out.println("=== Preparing to instrument " + variableTree.getName() + " ===");
+					if(VERBOSE) System.out.println("=== Preparing to instrument variable" + variableTree.getName() + " ===");
 					if(VERBOSE) System.out.println(logicBlock);
 					JCBlock block = (JCBlock) currentMethodTree.getBody();
 					//block.stats = block.stats.append(logicBlock);
-					block.stats = ASTHelper.insert(variablePos, logicBlock, block.stats);
+					
+					block.stats = ASTHelper.listInsert(variablePos, logicBlock, block.stats);
+					
+					System.out.println("INSTRUMENTING:");
+					block.stats.forEach(System.out::println);
+					//block.stats = ASTHelper.listRemove(variablePos - 1, block.stats);
 					//block.stats.addAll(variablePos, List.of(logicBlock));
 					
 				}
@@ -99,10 +111,9 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 	@Override
 	public Void visitMethod(MethodTree methodTree, Void p) {
 		this.currentMethodTree = methodTree;
-		this.variablePositions = ASTHelper.mapVariablePositions(methodTree);
 		variablePos = 0;
 		if(VERBOSE) System.out.println("METHOD: " + methodTree.getName());
-		System.out.println(ASTHelper.methodPosition(methodTree));
+		
 		//Handle @ReflectionMethod
 		if(!methodTree.getModifiers().getAnnotations().isEmpty()) {
 			for(AnnotationTree annotation : methodTree.getModifiers().getAnnotations()) {
@@ -142,7 +153,7 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					}
 					
 					JCBlock logicBlock = maker.Block(0, resultantList);
-					if(VERBOSE) System.out.println("=== Preparing to instrument " + methodTree.getName() + " ===");
+					if(VERBOSE) System.out.println("=== Preparing to instrument method " + methodTree.getName() + " ===");
 					if(VERBOSE) System.out.println(logicBlock);
 					JCBlock block = (JCBlock) methodTree.getBody();
 					block.stats = block.stats.append(logicBlock);
