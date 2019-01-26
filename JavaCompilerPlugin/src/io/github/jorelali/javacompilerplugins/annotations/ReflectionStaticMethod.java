@@ -11,6 +11,5 @@ import java.lang.annotation.Target;
 public @interface ReflectionStaticMethod {
 
 	Class<?> targetClass();
-	boolean isPrivate() default false;
 	
 }

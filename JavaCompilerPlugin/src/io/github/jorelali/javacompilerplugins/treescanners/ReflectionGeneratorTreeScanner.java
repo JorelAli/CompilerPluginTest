@@ -81,16 +81,8 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					
 					addExceptionToMethodDeclaredThrows(maker, names, currentMethodTree, Exception.class);
 					
-					boolean isPrivate = Boolean.valueOf(String.valueOf(getAnnotationValue(annotation, "isPrivate")));
 					
-					List<JCStatement> resultantList;
-					
-					if(isPrivate) {
-						resultantList = List.of(field, compiledSetAccessible, maker.Exec(assignVal));
-					} else {
-						resultantList = List.of(field, maker.Exec(assignVal));
-					}
-					
+					List<JCStatement> resultantList = List.of(field, compiledSetAccessible, maker.Exec(assignVal));					
 					
 					JCBlock logicBlock = maker.Block(0, resultantList);
 					if(VERBOSE) System.out.println("=== Preparing to instrument variable " + variableTree.getName() + " ===");
@@ -126,16 +118,8 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					
 					addExceptionToMethodDeclaredThrows(maker, names, currentMethodTree, Exception.class);
 					
-					boolean isPrivate = Boolean.valueOf(String.valueOf(getAnnotationValue(annotation, "isPrivate")));
 					
-					List<JCStatement> resultantList;
-					
-					if(isPrivate) {
-						resultantList = List.of(field, compiledSetAccessible, maker.Exec(assignVal));
-					} else {
-						resultantList = List.of(field, maker.Exec(assignVal));
-					}
-					
+					List<JCStatement> resultantList = List.of(field, compiledSetAccessible, maker.Exec(assignVal));
 					
 					JCBlock logicBlock = maker.Block(0, resultantList);
 					if(VERBOSE) System.out.println("=== Preparing to instrument variable " + variableTree.getName() + " ===");
@@ -182,15 +166,8 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					
 					//INSTRUMENTATION START
 
-					boolean isPrivate = Boolean.valueOf(String.valueOf(getAnnotationValue(annotation, "isPrivate")));
 					
-					List<JCStatement> resultantList;
-					
-					if(isPrivate) {
-						resultantList = List.of(method, compiledSetAccessible, compiledInvoke);
-					} else {
-						resultantList = List.of(method, compiledInvoke);
-					}
+					List<JCStatement> resultantList = List.of(method, compiledSetAccessible, compiledInvoke);
 					
 					JCBlock logicBlock = maker.Block(0, resultantList);
 					if(VERBOSE) System.out.println("=== Preparing to instrument method " + methodTree.getName() + " ===");

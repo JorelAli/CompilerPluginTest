@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
 public @interface ReflectionMethod {
 
 	Class<?> targetClass();
-	boolean isPrivate() default false;
 	String withInstance();
 	
 }
