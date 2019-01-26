@@ -37,6 +37,7 @@ public class ASTHelper {
 		return map;
 	}
 	
+	@Deprecated
 	public static Name makeNameDirty(String name) {
 		return new Name(null) {
 
@@ -96,6 +97,7 @@ public class ASTHelper {
 		return TreeMaker.instance(context).at(methodPosition(methodTree));
 	}
 	
+	@Deprecated
 	public static JCVariableDecl createLocalPrimitiveVariable(TreeMaker maker, String name, TypeTag type, JCExpression initValue) {
 		return maker.VarDef(maker.Modifiers(0), makeNameDirty(name), maker.TypeIdent(type), initValue);
 	}

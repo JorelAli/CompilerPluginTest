@@ -11,21 +11,18 @@ import java.util.Map;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.BasicJavacTask;
-import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree.JCAssign;
 import com.sun.tools.javac.tree.JCTree.JCBlock;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
 import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
-import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -95,6 +92,8 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					
 					System.out.println("\n\n");
 					
+					/* Method method = ExampleClass.class.getDeclaredMethod("sayHi"); */
+					
 					JCExpression methodClassExpr = ASTHelper.resolveName(maker, names, "java.lang.reflect.Method");
 
 					JCAssign targetClassTree = (JCAssign) annotation.getArguments().stream().peek(o -> System.out.println(o)).filter(o -> ((JCAssign) o).lhs.toString().equals("targetClass")).findFirst().get();					
@@ -109,8 +108,27 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 						//JCMethodInvocation declaredMethod = (JCMethodInvocation) ;
 					//Method m = this.getClass().getDeclaredMethod(name, parameterTypes)
 					
-					JCVariableDecl method = maker.VarDef(maker.Modifiers(0), ASTHelper.makeNameDirty("method"), methodClassExpr, c);
+					JCVariableDecl method = maker.VarDef(maker.Modifiers(0), names.fromString("method"), methodClassExpr, c);
 					System.out.println(method);
+					
+					
+					
+					
+					/* method.setAccessible(true); */
+					
+					JCMethodInvocation setAccessible = maker.Apply(List.nil(), ASTHelper.resolveName(maker, names, "method.setAccessible"), List.of(maker.Literal(true)));
+					JCExpressionStatement compiledSetAccessible = maker.Exec(setAccessible);
+					System.out.println(compiledSetAccessible);
+					
+					
+					
+					//JCExpression methodField = maker.Ident(method);
+//					JCFieldAccess methodFieldVar = maker.Select(method.nameexpr, ASTHelper.makeNameDirty("setAccessible"));
+//					System.out.println(methodFieldVar);
+//					
+//					JCMethodInvocation setAccessible = maker.Apply(List.nil(), maker.Select(maker.Ident(method), names.fromString("setAccessible")), List.of(maker.Literal(true)));
+//					JCExpressionStatement compiledSetAccessible = maker.Exec(setAccessible);
+//					System.out.println(compiledSetAccessible);
 					
 					System.out.println("\n\n");
 					
@@ -188,7 +206,7 @@ public class ReflectionGeneratorTreeScanner extends TreeScanner<Void, Void> {
 					
 					ASTHelper.addExceptionToMethodDeclaredThrows(maker, names, methodTree, Exception.class);
 					
-					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignIntTo2, newModifier,/* _try,*/ modifierDecl, maker.Exec(m), method));
+					JCBlock logicBlock = maker.Block(0, List.of(declareInt, assignIntTo2, newModifier,/* _try,*/ modifierDecl, maker.Exec(m), method, compiledSetAccessible));
 					System.out.println("=== Preparing to instrument " + methodTree.getName() + " ===");
 					System.out.println(logicBlock);
 					JCBlock block = (JCBlock) methodTree.getBody();
