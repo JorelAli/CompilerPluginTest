@@ -18,7 +18,7 @@ This project is a proof of concept that it is possible to create a Java Compiler
 The concept is as follows:
 Imagine you are a new developer learning Java and have heard of "reflection", but are not comfortable with using it, or do not know the syntax to perform reflection. You are however, comfortable with using annotations for variables and methods and decide to use custom annotations to handle the reflection access.
 
-///https://github.com/JorelAli/CompilerPluginTest/blob/master/JavaCompilerPluginTest/src/MyMain.java
+# Documentation (ish)
 
 ## Annotation declaration
 This project relies on two major annotations:
